@@ -24,17 +24,17 @@ db.version(1).stores({
 // 检查必要的库是否加载
 if (typeof Dexie === 'undefined') {
     console.error('Dexie.js 未正确加载');
-    alert('应用加载失败，请刷新页面重试');
+    showNotification('应用加载失败，Dexie.js库未找到，请刷新页面重试', 'error');
 }
 
 if (typeof Chart === 'undefined') {
     console.error('Chart.js 未正确加载');
-    alert('图表库加载失败，请刷新页面重试');
+    showNotification('应用加载失败，Chart.js库未找到，请刷新页面重试', 'error');
 }
 
 if (typeof imageCompression === 'undefined') {
     console.error('browser-image-compression 未正确加载');
-    alert('图片压缩库加载失败，请刷新页面重试');
+    showNotification('应用加载失败，图片压缩库未找到，请刷新页面重试', 'error');
 }
 
 // 应用状态管理
@@ -44,7 +44,17 @@ const appState = {
     charts: {
         weight: null,
         stomach: null
+    },
+    config: {
+        apiKey: null,
+        endpointId: null
     }
+};
+
+// localStorage 键名
+const STORAGE_KEYS = {
+    API_KEY: 'safegain_api_key',
+    ENDPOINT_ID: 'safegain_endpoint_id'
 };
 
 // DOM 元素引用
@@ -78,6 +88,16 @@ const elements = {
     weightDate: document.getElementById('weight-date'),
     saveWeightBtn: document.getElementById('save-weight-btn'),
 
+    // 设置弹窗
+    settingsModal: document.getElementById('settings-modal'),
+    settingsBtn: document.getElementById('settings-btn'),
+    closeSettings: document.getElementById('close-settings'),
+    apiKeyInput: document.getElementById('api-key-input'),
+    endpointInput: document.getElementById('endpoint-input'),
+    showApiKeyCheckbox: document.getElementById('show-api-key'),
+    saveSettingsBtn: document.getElementById('save-settings'),
+    resetSettingsBtn: document.getElementById('reset-settings'),
+
     // 弹窗
     notification: document.getElementById('notification'),
     notificationText: document.getElementById('notification-text'),
@@ -95,10 +115,21 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function initializeApp() {
+    console.log('Initializing SafeGain app...');
+
+    // 先检查必要的库
+    if (typeof Dexie === 'undefined' || typeof Chart === 'undefined' || typeof imageCompression === 'undefined') {
+        return; // 依赖库检查失败，停止初始化
+    }
+
+    loadConfigFromStorage();
     setupEventListeners();
     setDefaultDateTime();
     initializeCharts();
     loadStoredData();
+    checkFirstUse();
+
+    console.log('SafeGain app initialized successfully');
 }
 
 // 设置事件监听器
@@ -119,6 +150,13 @@ function setupEventListeners() {
 
     // 数据统计事件
     elements.saveWeightBtn.addEventListener('click', saveWeightRecord);
+
+    // 设置弹窗事件
+    elements.settingsBtn.addEventListener('click', showSettingsModal);
+    elements.closeSettings.addEventListener('click', hideSettingsModal);
+    elements.saveSettingsBtn.addEventListener('click', saveSettings);
+    elements.resetSettingsBtn.addEventListener('click', resetSettings);
+    elements.showApiKeyCheckbox.addEventListener('change', toggleApiKeyVisibility);
 
     // 弹窗关闭事件
     elements.closeNotification.addEventListener('click', hideNotification);
@@ -254,26 +292,20 @@ function fileToBase64(file) {
 
 // 调用火山引擎API
 async function callVolcanoEngineAPI(base64Image) {
-    // 检查配置是否已加载
-    if (typeof config === 'undefined') {
-        throw new Error('配置文件未加载，请检查 config.js 文件是否存在');
-    }
-
-    const apiKey = config.volcanoEngine.apiKey;
-    const endpointId = config.volcanoEngine.endpointId;
+    const apiKey = appState.config.apiKey;
+    const endpointId = appState.config.endpointId;
     const url = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
 
     // 验证配置
-    if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
-        throw new Error('API密钥未配置，请在 config.js 中设置正确的 apiKey');
+    if (!apiKey) {
+        throw new Error('API密钥未配置，请在设置中配置 API Key');
     }
 
-    if (!endpointId || endpointId === 'YOUR_ENDPOINT_ID_HERE') {
-        throw new Error('接入点ID未配置，请在 config.js 中设置正确的 endpointId');
+    if (!endpointId) {
+        throw new Error('接入点ID未配置，请在设置中配置 Endpoint ID');
     }
 
-    const systemPrompt = `
-    你是一位专业的临床营养师。用户是一位28岁男性，身高173cm，体重57.5kg（偏瘦，需增重），
+    const systemPrompt = `你是一位专业的临床营养师。用户是一位28岁男性，身高173cm，体重57.5kg（偏瘦，需增重），
     患有【轻微肺气肿】和【巴雷特食管】（Barrett's Esophagus）。
     
     请分析上传的食物图片，输出简短的 JSON 格式（不要Markdown代码块），包含以下字段：
@@ -282,8 +314,7 @@ async function callVolcanoEngineAPI(base64Image) {
     3. risk_check: 针对巴雷特食管的风险评估（是否过油、过酸、辛辣、难消化）。
     4. advice: 简短的饮食建议（针对增重和护胃）。
     
-    回答要非常简洁，不要废话。
-    `;
+    回答要非常简洁，不要废话。`;
 
     const payload = {
         model: endpointId,
@@ -297,7 +328,7 @@ async function callVolcanoEngineAPI(base64Image) {
                 content: [
                     {
                         type: 'text',
-                        text: '请分析这顿饭。'
+                        text: 'Please analyze this meal.'
                     },
                     {
                         type: 'image_url',
@@ -311,6 +342,8 @@ async function callVolcanoEngineAPI(base64Image) {
         stream: false
     };
 
+    console.log('Calling Volcano Engine API:', url);
+
     const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -321,10 +354,21 @@ async function callVolcanoEngineAPI(base64Image) {
     });
 
     if (!response.ok) {
+        console.error('API Response Error:', {
+            status: response.status,
+            statusText: response.statusText,
+            url: response.url
+        });
         throw new Error(`API Error: ${response.status} - ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('API Response:', data);
+
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error('Invalid API response format');
+    }
+
     return data.choices[0].message.content;
 }
 
@@ -705,4 +749,116 @@ function showRefluxReminder() {
 
 function hideRefluxReminder() {
     elements.refluxReminder.style.display = 'none';
+}
+
+// 配置管理功能
+function loadConfigFromStorage() {
+    try {
+        const apiKey = localStorage.getItem(STORAGE_KEYS.API_KEY);
+        const endpointId = localStorage.getItem(STORAGE_KEYS.ENDPOINT_ID);
+
+        console.log('Loaded config from storage:', {
+            hasApiKey: !!apiKey,
+            hasEndpointId: !!endpointId
+        });
+
+        appState.config.apiKey = apiKey;
+        appState.config.endpointId = endpointId;
+    } catch (error) {
+        console.error('Error loading config from storage:', error);
+        showNotification('配置加载失败，请检查浏览器设置', 'error');
+    }
+}
+
+function saveConfigToStorage() {
+    localStorage.setItem(STORAGE_KEYS.API_KEY, appState.config.apiKey);
+    localStorage.setItem(STORAGE_KEYS.ENDPOINT_ID, appState.config.endpointId);
+}
+
+function showSettingsModal() {
+    // 填入当前配置
+    elements.apiKeyInput.value = appState.config.apiKey || '';
+    elements.endpointInput.value = appState.config.endpointId || '';
+    elements.settingsModal.style.display = 'flex';
+}
+
+function hideSettingsModal() {
+    elements.settingsModal.style.display = 'none';
+}
+
+function saveSettings() {
+    const apiKey = elements.apiKeyInput.value.trim();
+    const endpointId = elements.endpointInput.value.trim();
+
+    if (!apiKey) {
+        showNotification('请输入 API Key', 'error');
+        return;
+    }
+
+    if (!endpointId) {
+        showNotification('请输入 Endpoint ID', 'error');
+        return;
+    }
+
+    appState.config.apiKey = apiKey;
+    appState.config.endpointId = endpointId;
+    saveConfigToStorage();
+
+    showNotification('设置保存成功', 'success');
+    hideSettingsModal();
+}
+
+function resetSettings() {
+    if (confirm('确定要重置设置为默认值吗？')) {
+        appState.config.apiKey = null;
+        appState.config.endpointId = null;
+        saveConfigToStorage();
+
+        elements.apiKeyInput.value = '';
+        elements.endpointInput.value = '';
+
+        showNotification('设置已重置', 'info');
+    }
+}
+
+function toggleApiKeyVisibility() {
+    const isVisible = elements.showApiKeyCheckbox.checked;
+    elements.apiKeyInput.type = isVisible ? 'text' : 'password';
+}
+
+function checkFirstUse() {
+    console.log('Checking first use, config:', appState.config);
+
+    if (!appState.config.apiKey || !appState.config.endpointId) {
+        console.log('First use detected, showing setup notice');
+
+        // 显示首次使用提示
+        const firstUseNotice = document.createElement('div');
+        firstUseNotice.className = 'first-use-notice';
+        firstUseNotice.innerHTML = `
+            <div>
+                <i class="fas fa-info-circle"></i>
+                <span>欢迎使用 SafeGain！请先设置 API Key 和 Endpoint ID</span>
+                <button onclick="showSettingsModal()">去设置</button>
+            </div>
+        `;
+
+        document.body.appendChild(firstUseNotice);
+
+        // 5秒后自动隐藏
+        setTimeout(() => {
+            if (firstUseNotice.parentNode) {
+                firstUseNotice.parentNode.removeChild(firstUseNotice);
+            }
+        }, 5000);
+
+        // 点击后立即隐藏
+        firstUseNotice.addEventListener('click', () => {
+            if (firstUseNotice.parentNode) {
+                firstUseNotice.parentNode.removeChild(firstUseNotice);
+            }
+        });
+    } else {
+        console.log('Configuration found, skipping first use notice');
+    }
 }

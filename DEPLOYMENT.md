@@ -45,8 +45,13 @@ git add .
 # 提交文件
 git commit -m "Initial commit: SafeGain H5 health management app"
 
-# 推送到 GitHub
+# 检查当前分支
+git branch
+
+# 推送到 GitHub（根据你的分支名称选择 main 或 master）
 git push -u origin main
+# 或者如果使用 master 分支：
+# git push -u origin master
 ```
 
 ### 4. 部署到 GitHub Pages
@@ -56,13 +61,15 @@ git push -u origin main
 2. 点击 Settings 选项卡
 3. 在左侧菜单中找到 Pages
 4. 在 Source 部分，选择 Deploy from a branch
-5. 选择 main 分支和 / (root) 文件夹
+5. 选择你的分支（main 或 master）和 / (root) 文件夹
 6. 点击 Save
 
 #### 方法二：通过 GitHub CLI
 ```bash
-# 启用 GitHub Pages
+# 启用 GitHub Pages（根据你的分支名称选择 main 或 master）
 gh pages create --source main:/ --project safegain-h5
+# 或者如果使用 master 分支：
+# gh pages create --source master:/ --project safegain-h5
 ```
 
 ### 5. 访问应用

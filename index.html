@@ -234,6 +234,47 @@
         </div>
     </div>
 
+    <!-- 设置弹窗 -->
+    <div id="settings-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> API 设置</h2>
+                <button id="close-settings" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="api-key-input">API Key</label>
+                    <input type="password" id="api-key-input" class="form-input" placeholder="请输入火山引擎 API Key">
+                </div>
+                <div class="form-group">
+                    <label for="endpoint-input">Endpoint ID</label>
+                    <input type="text" id="endpoint-input" class="form-input" placeholder="请输入接入点 ID">
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="show-api-key">
+                        <span>显示 API Key</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings" class="primary-btn">
+                    <i class="fas fa-save"></i> 保存设置
+                </button>
+                <button id="reset-settings" class="secondary-btn">
+                    <i class="fas fa-undo"></i> 重置为默认
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置按钮 -->
+    <button id="settings-btn" class="settings-fab">
+        <i class="fas fa-cog"></i>
+    </button>
+
     <script src="app.js"></script>
 </body>
 
