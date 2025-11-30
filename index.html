@@ -4,276 +4,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeGain - 安全增重健康管理</title>
+    <title>SafeGain - AI 增重助手</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2E7D32">
+
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Dexie.js - IndexedDB封装库 -->
-    <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
-    <!-- Chart.js 用于图表展示 -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- browser-image-compression 用于图片压缩 -->
-    <script
-        src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
-    <!-- 配置文件 (需要在 app.js 之前加载) -->
-    <script src="config.js"></script>
+    <link rel="stylesheet" href="https://lib.baomitu.com/font-awesome/6.4.2/css/all.min.css">
+
+    <script src="https://lib.baomitu.com/dexie/3.2.4/dexie.min.js"></script>
+    <script src="https://lib.baomitu.com/Chart.js/4.4.0/chart.umd.js"></script>
+    <script src="https://lib.baomitu.com/browser-image-compression/2.0.2/browser-image-compression.js"></script>
 </head>
 
 <body>
     <div class="app-container">
-        <!-- 顶部导航栏 -->
         <header class="app-header">
-            <h1><i class="fas fa-heartbeat"></i> SafeGain</h1>
-            <div class="breathing-reminder">
-                <i class="fas fa-wind"></i> 发力呼气，还原吸气，禁止憋气
+            <div class="header-content">
+                <h1><i class="fas fa-heartbeat"></i> SafeGain</h1>
+                <div class="breathing-reminder">
+                    <i class="fas fa-wind"></i> 呼气发力 · 吸气还原
+                </div>
             </div>
         </header>
 
-        <!-- 主要内容区域 -->
         <main class="app-main">
-            <!-- 底部导航标签 -->
-            <div class="tab-navigation">
-                <button class="tab-btn active" data-tab="diet">
-                    <i class="fas fa-utensils"></i>
-                    <span>饮食管理</span>
-                </button>
-                <button class="tab-btn" data-tab="workout">
-                    <i class="fas fa-dumbbell"></i>
-                    <span>运动管理</span>
-                </button>
-                <button class="tab-btn" data-tab="stats">
-                    <i class="fas fa-chart-line"></i>
-                    <span>数据统计</span>
-                </button>
-            </div>
-
-            <!-- 饮食管理标签页 -->
             <div class="tab-content active" id="diet-tab">
-                <div class="meal-analysis-section">
-                    <h2>AI饮食分析</h2>
+                <div class="card meal-analysis-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-camera-retro"></i> AI 饮食分析</h2>
+                    </div>
+
                     <div class="camera-section">
-                        <button id="capture-btn" class="primary-btn">
-                            <i class="fas fa-camera"></i> 拍照分析食物
+                        <button id="capture-btn" class="primary-btn pulse-effect">
+                            <i class="fas fa-camera"></i> 拍食物 / 选图片
                         </button>
-                        <input type="file" id="file-input" accept="image/*" style="display: none;">
+                        <input type="file" id="file-input" accept="image/*" capture="environment"
+                            style="display: none;">
                     </div>
 
-                    <div id="image-preview" class="image-preview" style="display: none;">
-                        <img id="preview-img" src="" alt="食物图片预览">
+                    <div id="image-preview" class="image-preview-container" style="display: none;">
+                        <img id="preview-img" src="" alt="食物预览">
                         <button id="analyze-btn" class="primary-btn">
-                            <i class="fas fa-microscope"></i> 开始分析
+                            <i class="fas fa-microscope"></i> 开始 AI 分析
                         </button>
                     </div>
 
-                    <div id="analysis-result" class="analysis-result" style="display: none;">
-                        <!-- AI分析结果将在这里显示 -->
+                    <div id="analysis-result" class="analysis-card" style="display: none;">
                     </div>
                 </div>
 
-                <div class="meal-record-section">
-                    <h2>记录用餐感受</h2>
+                <div class="card meal-record-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-edit"></i> 用餐感受</h2>
+                    </div>
                     <div class="form-group">
-                        <label for="meal-time">用餐时间</label>
+                        <label><i class="far fa-clock"></i> 时间</label>
                         <input type="datetime-local" id="meal-time" class="form-input">
                     </div>
 
                     <div class="form-group">
                         <label>胃部感觉</label>
-                        <div class="radio-group">
-                            <label class="radio-label">
+                        <div class="radio-group-modern">
+                            <label class="radio-card success">
                                 <input type="radio" name="stomach-feeling" value="comfortable">
+                                <span class="icon"><i class="far fa-smile"></i></span>
                                 <span>舒适</span>
                             </label>
-                            <label class="radio-label">
+                            <label class="radio-card warning">
                                 <input type="radio" name="stomach-feeling" value="bloating">
+                                <span class="icon"><i class="far fa-meh"></i></span>
                                 <span>胀气</span>
                             </label>
-                            <label class="radio-label">
+                            <label class="radio-card danger">
                                 <input type="radio" name="stomach-feeling" value="reflux">
+                                <span class="icon"><i class="far fa-frown"></i></span>
                                 <span>反酸</span>
                             </label>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="meal-notes">备注</label>
-                        <textarea id="meal-notes" class="form-textarea" placeholder="记录用餐感受或其他信息..."></textarea>
+                        <label>备注</label>
+                        <textarea id="meal-notes" class="form-textarea" placeholder="今天胃口怎么样？"></textarea>
                     </div>
 
-                    <button id="save-meal-btn" class="primary-btn">
-                        <i class="fas fa-save"></i> 保存记录
+                    <button id="save-meal-btn" class="secondary-btn full-width">
+                        <i class="fas fa-check"></i> 保存记录
                     </button>
                 </div>
             </div>
 
-            <!-- 运动管理标签页 -->
             <div class="tab-content" id="workout-tab">
-                <div class="workout-section">
-                    <h2>安全运动记录</h2>
-                    <div class="safety-reminder">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p>注意：仅记录安全动作，避免憋气和平躺动作</p>
+                <div class="card workout-section">
+                    <div class="safety-banner">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>安全提示：避免平躺，保持头部抬高</span>
                     </div>
 
                     <div class="form-group">
-                        <label for="exercise-type">运动类型</label>
+                        <label>运动项目</label>
                         <select id="exercise-type" class="form-select">
-                            <option value="">请选择运动类型</option>
-                            <option value="incline-dumbbell-press">上斜哑铃卧推（防反流）</option>
-                            <option value="seated-press">坐姿推举（有靠背）</option>
-                            <option value="goblet-squat">高脚杯深蹲（低腹压）</option>
+                            <option value="">选择安全动作...</option>
+                            <option value="incline-dumbbell-press">上斜哑铃卧推 (防反流)</option>
+                            <option value="seated-press">坐姿推举 (护腰背)</option>
+                            <option value="goblet-squat">高脚杯深蹲 (低腹压)</option>
+                            <option value="lateral-raise">哑铃侧平举</option>
+                            <option value="bicep-curl">二头弯举</option>
                         </select>
                     </div>
 
-                    <div class="form-group">
-                        <label for="workout-sets">组数</label>
-                        <input type="number" id="workout-sets" class="form-input" min="1" max="10" value="3">
+                    <div class="workout-inputs-row">
+                        <div class="form-group">
+                            <label>组数</label>
+                            <input type="number" id="workout-sets" class="form-input" value="3">
+                        </div>
+                        <div class="form-group">
+                            <label>次数/组</label>
+                            <input type="number" id="workout-reps" class="form-input" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label>重量(kg)</label>
+                            <input type="number" id="workout-weight" class="form-input" value="5">
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="workout-reps">每组次数</label>
-                        <input type="number" id="workout-reps" class="form-input" min="1" max="50" value="10">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="workout-weight">重量 (kg)</label>
-                        <input type="number" id="workout-weight" class="form-input" min="0" max="200" step="0.5"
-                            value="5">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="workout-time">运动时间</label>
+                        <label>时间</label>
                         <input type="datetime-local" id="workout-time" class="form-input">
                     </div>
 
                     <div class="form-group">
-                        <label for="workout-notes">备注</label>
-                        <textarea id="workout-notes" class="form-textarea" placeholder="记录运动感受..."></textarea>
+                        <label>感受</label>
+                        <textarea id="workout-notes" class="form-textarea" placeholder="有力竭感吗？有无不适？"></textarea>
                     </div>
 
-                    <button id="save-workout-btn" class="primary-btn">
-                        <i class="fas fa-save"></i> 保存运动记录
+                    <button id="save-workout-btn" class="primary-btn full-width">
+                        <i class="fas fa-dumbbell"></i> 打卡完成
                     </button>
                 </div>
             </div>
 
-            <!-- 数据统计标签页 -->
             <div class="tab-content" id="stats-tab">
-                <div class="stats-section">
-                    <h2>健康数据统计</h2>
-
-                    <div class="weight-tracking">
-                        <h3>体重记录</h3>
-                        <div class="form-group">
-                            <label for="weight-input">当前体重 (kg)</label>
-                            <input type="number" id="weight-input" class="form-input" min="30" max="200" step="0.1">
+                <div class="card stats-section">
+                    <div class="calendar-module">
+                        <h3><i class="fas fa-calendar-check"></i> 本月运动打卡</h3>
+                        <div id="workout-calendar" class="calendar-grid">
                         </div>
-                        <div class="form-group">
-                            <label for="weight-date">测量日期</label>
-                            <input type="date" id="weight-date" class="form-input">
-                        </div>
-                        <button id="save-weight-btn" class="primary-btn">
-                            <i class="fas fa-save"></i> 记录体重
-                        </button>
                     </div>
 
-                    <div class="charts-container">
-                        <div class="chart-section">
-                            <h3>体重变化趋势</h3>
+                    <div class="weight-module">
+                        <h3><i class="fas fa-weight"></i> 体重追踪</h3>
+                        <div class="input-with-btn">
+                            <input type="number" id="weight-input" class="form-input" placeholder="kg" step="0.1">
+                            <input type="date" id="weight-date" class="form-input">
+                            <button id="save-weight-btn" class="primary-btn small">记录</button>
+                        </div>
+                    </div>
+
+                    <div class="charts-wrapper">
+                        <div class="chart-box">
                             <canvas id="weight-chart"></canvas>
                         </div>
-
-                        <div class="chart-section">
-                            <h3>胃部感受统计</h3>
+                        <div class="chart-box" style="margin-top: 1rem; display:none;">
                             <canvas id="stomach-chart"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <div class="tab-content" id="profile-tab">
+                <div class="card profile-section">
+                    <div class="profile-header">
+                        <div class="avatar-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <h3>个人健康档案</h3>
+                        <p class="subtitle">配置您的专属 AI 营养师</p>
+                    </div>
+
+                    <div class="settings-group">
+                        <h4><i class="fas fa-key"></i> 接口配置 (API)</h4>
+                        <div class="form-group">
+                            <label>Endpoint ID (接入点)</label>
+                            <input type="text" id="endpoint-input" class="form-input" placeholder="火山引擎 Endpoint ID">
+                        </div>
+                        <div class="form-group">
+                            <label>API Key (密钥)</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="api-key-input" class="form-input" placeholder="sk-...">
+                                <i class="fas fa-eye toggle-password" id="toggle-api-key"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <div class="group-header">
+                            <h4><i class="fas fa-id-card-alt"></i> 健康档案 (Prompt Context)</h4>
+                            <button id="reset-prompt-btn" class="text-btn">恢复默认</button>
+                        </div>
+                        <p class="helper-text" style="font-size:0.8rem; color:#888; margin-bottom:0.5rem;">请描述身体状况，AI
+                            将据此分析：</p>
+                        <textarea id="user-prompt-input" class="form-textarea code-font" rows="5"></textarea>
+                    </div>
+
+                    <button id="save-profile-btn" class="primary-btn full-width">
+                        <i class="fas fa-save"></i> 保存全部设置
+                    </button>
+
+                    <div class="privacy-note">
+                        <i class="fas fa-shield-alt"></i>
+                        <p>承诺：所有数据（Key、档案、记录）仅存储在您的本地浏览器，绝不上传云端。</p>
+                    </div>
+
+                    <div class="version-info">SafeGain v2.1</div>
+                </div>
+            </div>
         </main>
 
-        <!-- 底部导航栏 -->
-        <footer class="app-footer">
-            <div class="footer-info">
-                <p>SafeGain v1.0 - 安全增重健康管理</p>
-            </div>
-        </footer>
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-tab="diet">
+                <i class="fas fa-utensils"></i>
+                <span>饮食</span>
+            </button>
+            <button class="tab-btn" data-tab="workout">
+                <i class="fas fa-dumbbell"></i>
+                <span>运动</span>
+            </button>
+            <button class="tab-btn" data-tab="stats">
+                <i class="fas fa-chart-line"></i>
+                <span>统计</span>
+            </button>
+            <button class="tab-btn" data-tab="profile">
+                <i class="fas fa-user"></i>
+                <span>我的</span>
+            </button>
+        </nav>
     </div>
 
-    <!-- 提示弹窗 -->
     <div id="notification" class="notification" style="display: none;">
         <div class="notification-content">
             <i class="fas fa-info-circle"></i>
             <p id="notification-text"></p>
-            <button id="close-notification" class="close-btn">
-                <i class="fas fa-times"></i>
-            </button>
         </div>
     </div>
 
-    <!-- 风险警告弹窗 -->
     <div id="risk-alert" class="risk-alert" style="display: none;">
         <div class="risk-alert-content">
-            <i class="fas fa-exclamation-triangle"></i>
-            <h3>饮食风险警告</h3>
+            <div class="alert-icon-wrapper"><i class="fas fa-exclamation-triangle"></i></div>
+            <h3>饮食风险提示</h3>
             <p id="risk-message"></p>
-            <div class="alert-actions">
-                <button id="acknowledge-risk" class="primary-btn">我已了解</button>
-            </div>
+            <button id="acknowledge-risk" class="alert-btn">我已了解</button>
         </div>
     </div>
 
-    <!-- 反酸提示弹窗 -->
     <div id="reflux-reminder" class="reflux-reminder" style="display: none;">
         <div class="reminder-content">
             <i class="fas fa-bed"></i>
             <h3>睡眠建议</h3>
-            <p>今晚请垫高枕头睡觉，有助于减少胃酸反流</p>
-            <div class="reminder-actions">
-                <button id="acknowledge-reminder" class="primary-btn">我知道了</button>
-            </div>
+            <p>检测到反酸风险，今晚请尝试<strong>垫高上半身 15-20cm</strong> 入睡。</p>
+            <button id="acknowledge-reminder" class="primary-btn">好的</button>
         </div>
     </div>
-
-    <!-- 设置弹窗 -->
-    <div id="settings-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-cog"></i> API 设置</h2>
-                <button id="close-settings" class="close-btn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="api-key-input">API Key</label>
-                    <input type="password" id="api-key-input" class="form-input" placeholder="请输入火山引擎 API Key">
-                </div>
-                <div class="form-group">
-                    <label for="endpoint-input">Endpoint ID</label>
-                    <input type="text" id="endpoint-input" class="form-input" placeholder="请输入接入点 ID">
-                </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="show-api-key">
-                        <span>显示 API Key</span>
-                    </label>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="save-settings" class="primary-btn">
-                    <i class="fas fa-save"></i> 保存设置
-                </button>
-                <button id="reset-settings" class="secondary-btn">
-                    <i class="fas fa-undo"></i> 重置为默认
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 设置按钮 -->
-    <button id="settings-btn" class="settings-fab">
-        <i class="fas fa-cog"></i>
-    </button>
 
     <script src="app.js"></script>
 </body>
